@@ -1,0 +1,4 @@
+﻿  main.c
+C:\Users\赵海涛\Desktop\projects\c_jons_parse\main.c(4,1): warning C4090: “初始化”: 不同的“const”限定符
+C:\Users\赵海涛\Desktop\projects\c_jons_parse\main.c(17,1): warning C4090: “初始化”: 不同的“const”限定符
+  c_jons_parse.vcxproj -> C:\Users\赵海涛\Desktop\projects\c_jons_parse\x64\Debug\c_jons_parse.exe
