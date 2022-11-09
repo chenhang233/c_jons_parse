@@ -57,7 +57,7 @@ static const char * parse_number(JSON* item,const char* str) {
 	item->valueInt = (int)n;
 	return str;
 }
-char* p = "站位p";
+
 static const char* parse_string(JSON * item, const char* str) { 
 	const char* pos = str + 1, char* out, char*str2;
 	int len = 0;
@@ -80,7 +80,26 @@ static const char* parse_string(JSON * item, const char* str) {
 	item->valueString = out;
 	return pos;
 }
-static const char* parse_array(JSON *item, const char *str){ return p; }
+static const char* parse_array(JSON *item, const char *str){ 
+	JSON* child;
+	if (*str != '[') expression = str, return 0;
+	item->type = JSON_array;
+	str = skip(str + 1);
+	if (*str == ']') return str + 1;
+	item->child = child = c_json_newItem();
+	str = skip(parse_value(child, str));
+	if (!str) return 0;
+	while (*str == ',')
+	{
+		JSON* nextChild = c_json_newItem();
+		child->next = nextChild, nextChild->prev = child, child = nextChild;
+		str = skip(parse_value(child, skip(str + 1));
+		if (!str) return 0;
+	}
+	if (*str == ']') return str + 1;
+	expression = str;
+	return 0;
+}
 static const char* parse_object(JSON*item, const char *str) {
 	JSON* child;
 	if (*str != '{') expression = str, return 0;
@@ -91,6 +110,7 @@ static const char* parse_object(JSON*item, const char *str) {
 	if (!item->child) return 0;
 
 	str = skip(parse_string(child, str));
+	if (!str) return 0;
 	child->nameString = child->valueString;
 	child->valueString = 0;
 	if (*str != ':') { 
@@ -104,6 +124,7 @@ static const char* parse_object(JSON*item, const char *str) {
 		JSON* nextChild = c_json_newItem();
 		child->next = nextChild, nextChild->prev = child, child = nextChild;
 		str = skip(parse_string(child, skip(str + 1)));
+		if (!str) return 0;
 		child->nameString = child->valueString;
 		child->valueString = 0;
 		if (*str != ':') {
@@ -181,10 +202,10 @@ void writeInFile() {
 void generateInit(const char *arr[],int size) {
 	for (int i = 0; i < size; i++)
 	{
-		//doInit(arr[i]);
-		for (int j = 0; j < 30; j++) {
+		doInit(arr[i]);
+		/*for (int j = 0; j < 30; j++) {
 			printf("arr[%d][%d]=%c\n", i,j, arr[i][j]);
-		}
+		}*/
 		//printf("arr[%d]=%s\n",i,arr[i]);
 	}
 }
