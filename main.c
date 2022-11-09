@@ -13,8 +13,8 @@
 
 static const char* expression;
 typedef struct json {
-		JSON* prev,*next;
-		JSON* child;
+	struct json* prev,*next;
+	struct json* child;
 		int type;
 		char* valueString;
 		char* nameString;
@@ -24,17 +24,17 @@ typedef struct json {
 
 static JSON* c_json_newItem() {
 	JSON* node = (JSON*)malloc(sizeof(JSON));
-	if (node)  memset(node,0, sizeof(JSON);
+	if (node)  memset(node,0, sizeof(JSON));
 	return node;
 }
 
-static const skip(char* in) {
+static const char * skip(char* in) {
 	while (in && *in && (unsigned char)*in <= 32)
 		in++;
 	return in;
 }
-static const parse_number(JSON* item, char* str) {
-	double n,sign = 1, scale = 0;
+static const char * parse_number(JSON* item,const char* str) {
+	double n = 0,sign = 1, scale = 0;
 	if (*str == '-') sign = -1;
 	if (*str == '0') str++;
 	if (*str >= '0' && *str <= '9') {
@@ -57,11 +57,67 @@ static const parse_number(JSON* item, char* str) {
 	item->valueInt = (int)n;
 	return str;
 }
-static const parse_string(JSON*item, char *str) {}
-static const parse_array(JSON *item, char *str){}
-static const parse_object(JSON*item, char *str) {}
+char* p = "站位p";
+static const char* parse_string(JSON * item, const char* str) { 
+	const char* pos = str + 1, char* out, char*str2;
+	int len = 0;
+	if (*str != '\"') expression = str, return 0;
+	while (*pos != '\"' && *pos && ++len) if (*pos++ == '\\') pos++;
+	out = malloc(len + 1);
+	if (!out) return 0;
+	pos = str + 1, str2 = out;
+	while (*pos != '\"')
+	{
+		if (*pos != '\\') *str2++ = *pos++;
+		else {
+			pos++;
+			*str2++ = *pos++;
+		}
+	}
+	*str2 = '\0';
+	if (*pos == '\"') pos++;
+	item->type = JSON_string;
+	item->valueString = out;
+	return pos;
+}
+static const char* parse_array(JSON *item, const char *str){ return p; }
+static const char* parse_object(JSON*item, const char *str) {
+	JSON* child;
+	if (*str != '{') expression = str, return 0;
+	item->type = JSON_object;
+	str = skip(str + 1);
+	if (str == '}') return str + 1;
+	item->child = child = c_json_newItem();
+	if (!item->child) return 0;
 
-char * parse_value(JSON* node, char*value) {
+	str = skip(parse_string(child, str));
+	child->nameString = child->valueString;
+	child->valueString = 0;
+	if (*str != ':') { 
+		expression = str;  
+		return 0;
+	}
+	str =  skip(parse_value(child, skip(str + 1)));
+	if (!str) return 0;
+	while (str == ',')
+	{
+		JSON* nextChild = c_json_newItem();
+		child->next = nextChild, nextChild->prev = child, child = nextChild;
+		str = skip(parse_string(child, skip(str + 1)));
+		child->nameString = child->valueString;
+		child->valueString = 0;
+		if (*str != ':') {
+			expression = str;
+			return 0;
+		}
+		str = skip(parse_value(child, skip(str + 1)));
+	}
+	if (str == '}') return str + 1;
+	expression = str;
+	return 0;
+}
+
+static const char * parse_value(JSON* node,const char*value) {
 	if (!value) return 0;
 	if (!strncmp(value, "null", 4)) {
 		node->type = JSON_null;
@@ -76,26 +132,25 @@ char * parse_value(JSON* node, char*value) {
 		return value + 5;
 	}
 	if (*value == '-' || (*value <= 0 && *value >= 9)) {
-		node->type = JSON_number;
 		return parse_number(node, value);
 	}
 	if (*value == '\"') { return parse_string(node, value); }
 	if (*value == '{') {
-		node->type = JSON_object;
 		return parse_object(node, value);
 	}
 	if (*value == '[') {
-		node->type = JSON_array;
 		return parse_array(node, value);
 	}
+	expression = value;
+	return 0;
 }
 
-void parse_options(char * text, char **require_end)
+JSON* parse_options(char * text,const char **require_end)
 {
-	const char *end;
+	 const char *end = 0;
 	JSON* c;
 	c = c_json_newItem();
-	expression = "初始化node执行: c_json_newItem";
+	expression = "初始化json节点执行: c_json_newItem";
 	if (!c) return 0;
 	end = parse_value(c, skip(text));
 	if (require_end) *require_end = end;
@@ -105,10 +160,10 @@ void parse_options(char * text, char **require_end)
 JSON* parse(char* text) { return parse_options(text, 0); }
 
 char* json_print(JSON* json) {
-
+	return p;
 }
 
-void ErrorCatch() {
+static const char* ErrorCatch() {
 	return expression;
 }
 void doInit(char*text) {
@@ -126,7 +181,11 @@ void writeInFile() {
 void generateInit(const char *arr[],int size) {
 	for (int i = 0; i < size; i++)
 	{
-		printf("arr[%d]=%s",i,arr[i]);
+		//doInit(arr[i]);
+		for (int j = 0; j < 30; j++) {
+			printf("arr[%d][%d]=%c\n", i,j, arr[i][j]);
+		}
+		//printf("arr[%d]=%s\n",i,arr[i]);
 	}
 }
 
@@ -136,7 +195,6 @@ int main(int argc, const char * argv) {
 	char text3[] = "[\n    [0, -1, 0],\n    [1, 0, 0],\n    [0, 0, 1]\n	]\n";
 	char text4[] = "{\n		\"Image\": {\n			\"Width\":  800,\n			\"Height\": 600,\n			\"Title\":  \"View from 15th Floor\",\n			\"Thumbnail\": {\n				\"Url\":    \"http:/*www.example.com/image/481989943\",\n				\"Height\": 125,\n				\"Width\":  \"100\"\n			},\n			\"IDs\": [116, 943, 234, 38793]\n		}\n	}";
 	char text5[] = "[\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.7668,\n	 \"Longitude\": -122.3959,\n	 \"Address\":   \"\",\n	 \"City\":      \"SAN FRANCISCO\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94107\",\n	 \"Country\":   \"US\"\n	 },\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.371991,\n	 \"Longitude\": -122.026020,\n	 \"Address\":   \"\",\n	 \"City\":      \"SUNNYVALE\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94085\",\n	 \"Country\":   \"US\"\n	 }\n	 ]";
-	//doInit(text1);
 	char *allText[5] = { text1,text2, text3,text4,text5 };
 	generateInit(allText, 5);
 }
