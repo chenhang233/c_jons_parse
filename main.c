@@ -22,13 +22,15 @@ typedef struct json {
 		double ValueDouble;
 } JSON;
 
+static const char* parse_value(JSON* node, const char* value);
+
 static JSON* c_json_newItem() {
 	JSON* node = (JSON*)malloc(sizeof(JSON));
 	if (node)  memset(node,0, sizeof(JSON));
 	return node;
 }
 
-static const char * skip(char* in) {
+static const char * skip(const char* in) {
 	while (in && *in && (unsigned char)*in <= 32)
 		in++;
 	return in;
@@ -59,9 +61,14 @@ static const char * parse_number(JSON* item,const char* str) {
 }
 
 static const char* parse_string(JSON * item, const char* str) { 
-	const char* pos = str + 1, char* out, char*str2;
+	const char* pos = str + 1;
+	char* out;
+	char* str2;
 	int len = 0;
-	if (*str != '\"') expression = str, return 0;
+	if (*str != '\"') {
+		expression = str;
+		return 0;
+	}
 	while (*pos != '\"' && *pos && ++len) if (*pos++ == '\\') pos++;
 	out = malloc(len + 1);
 	if (!out) return 0;
@@ -82,7 +89,10 @@ static const char* parse_string(JSON * item, const char* str) {
 }
 static const char* parse_array(JSON *item, const char *str){ 
 	JSON* child;
-	if (*str != '[') expression = str, return 0;
+	if (*str != '[') { 
+		expression = str;
+		return 0;
+	}
 	item->type = JSON_array;
 	str = skip(str + 1);
 	if (*str == ']') return str + 1;
@@ -93,7 +103,7 @@ static const char* parse_array(JSON *item, const char *str){
 	{
 		JSON* nextChild = c_json_newItem();
 		child->next = nextChild, nextChild->prev = child, child = nextChild;
-		str = skip(parse_value(child, skip(str + 1));
+		str = skip(parse_value(child, skip(str + 1)));
 		if (!str) return 0;
 	}
 	if (*str == ']') return str + 1;
@@ -102,7 +112,10 @@ static const char* parse_array(JSON *item, const char *str){
 }
 static const char* parse_object(JSON*item, const char *str) {
 	JSON* child;
-	if (*str != '{') expression = str, return 0;
+	if (*str != '{') {
+		expression = str;
+		return 0;
+	}
 	item->type = JSON_object;
 	str = skip(str + 1);
 	if (str == '}') return str + 1;
@@ -181,16 +194,25 @@ JSON* parse_options(char * text,const char **require_end)
 JSON* parse(char* text) { return parse_options(text, 0); }
 
 char* json_print(JSON* json) {
+	char* p = "待完成...";
 	return p;
 }
 
 static const char* ErrorCatch() {
 	return expression;
 }
-void doInit(char*text) {
+void doInit(const char*text) {
 	char* out; JSON* json;
 	json = parse(text);
 	if (!json)  printf("Error position: %s\n", ErrorCatch());
+	printf("json-child-%s-\n", json->child);
+	printf("json-nameString-%s-\n", json->nameString);
+	printf("json--%s-\n", json->next);
+	printf("json--%s-\n", json->prev);
+	printf("json--%d-\n", json->type);
+	printf("json--%lf-\n", json->ValueDouble);
+	printf("json--%d-\n", json->valueInt);
+	printf("json-valueString-%s-\n", json->valueString);
 	out = json_print(json);
 }
 
