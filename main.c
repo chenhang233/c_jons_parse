@@ -23,6 +23,7 @@ typedef struct json {
 } JSON;
 
 static const char* parse_value(JSON* node, const char* value);
+static const char* parse_array(JSON* item, const char* str);
 
 static JSON* c_json_newItem() {
 	JSON* node = (JSON*)malloc(sizeof(JSON));
@@ -38,7 +39,7 @@ static const char * skip(const char* in) {
 }
 static const char * parse_number(JSON* item,const char* str) {
 	double n = 0,sign = 1, scale = 0;
-	if (*str == '-') sign = -1;
+	if (*str == '-') sign = -1,str++;
 	if (*str == '0') str++;
 	if (*str >= '0' && *str <= '9') {
 		do
@@ -119,7 +120,7 @@ static const char* parse_object(JSON*item, const char *str) {
 	}
 	item->type = JSON_object;
 	str = skip(str + 1);
-	if (str == '}') return str + 1;
+	if (*str == '}') return str + 1;
 	item->child = child = c_json_newItem();
 	if (!item->child) return 0;
 
@@ -132,7 +133,6 @@ static const char* parse_object(JSON*item, const char *str) {
 		return 0;
 	}
 	str =  skip(parse_value(child, skip(str + 1)));
-	printf("*str=%c", *str);
 	if (!str) return 0;
 	while (*str == ',')
 	{
@@ -185,7 +185,7 @@ static const char * parse_value(JSON* node,const char*value) {
 	return 0;
 }
 
-JSON* parse_options(char * text,const char **require_end)
+JSON* parse_options(const char * text,const char **require_end)
 {
 	 const char *end = 0;
 	JSON* c;
@@ -197,7 +197,7 @@ JSON* parse_options(char * text,const char **require_end)
 	return c;
 }
 
-JSON* parse(char* text) { return parse_options(text, 0); }
+JSON* parse(const char* text) { return parse_options(text, 0); }
 
 char* json_print(JSON* json) {
 	char* p = "待完成...";
@@ -211,18 +211,7 @@ void doInit(const char*text) {
 	char* out; JSON* json;
 	json = parse(text);
 	if (!json)  printf("Error position: %s\n", ErrorCatch());
-	printf("json-child-%s-\n", json->child);
-	printf("json-nameString-%s-\n", json->nameString);
-	//printf("json--%s-\n", json->next);
-	//printf("json--%s-\n", json->prev);
-	printf("json-type-%d-\n", json->type);
-	//printf("json--%lf-\n", json->ValueDouble);
-	//printf("json--%d-\n", json->valueInt);
-	printf("json-valueString-%s-\n", json->valueString);
 	out = json_print(json);
-	if (expression) {
-		printf("Error position: %s\n", ErrorCatch());
-	}
 }
 
 
@@ -254,8 +243,8 @@ int main(int argc, const char * argv) {
 	char text10[] = "-56";
 	char *allText[5] = { text1,text2, text3,text4,text5 };
 	char* allText2[5] = { text6,text7,text8,text9,text10 };
-	char* temp[1] = { text1 };
-	generateInit(temp, 1);
+	char* temp[1] = { text3 };
+	//generateInit(temp, 1);
 	//generateInit(allText2, 5);
-	//generateInit(allText1, 5);
+	generateInit(allText, 5);
 }
