@@ -32,6 +32,19 @@ static JSON* c_json_newItem() {
 	return node;
 }
 
+void c_json_delete(JSON*c) {
+	JSON* next;
+	while (c)
+	{
+		next = c->next;
+		if (c->child) c_json_delete(c->child);
+		if (c->nameString) free(c->nameString);
+		if (c->valueString) free(c->valueString);
+		free(c);
+		c = next;
+	}
+}
+
 static const char * skip(const char* in) {
 	while (in && *in && (unsigned char)*in <= 32)
 		in++;
@@ -158,17 +171,14 @@ static const char * parse_value(JSON* node,const char*value) {
 	if (!value) return 0;
 	if (!strncmp(value, "null", 4)) {
 		node->type = JSON_null;
-		node->valueString = "null";
 		return value + 4;
 	}
 	if (!strncmp(value, "true", 4)) {
 		node->type = JSON_true;
-		node->valueString = "true";
 		return value + 4;
 	}
 	if (!strncmp(value, "false", 5)) {
 		node->type = JSON_false;
-		node->valueString = "false";
 		return value + 5;
 	}																				 
 	if (*value == '-' || (*value >= '0' && *value <= '9')) {
@@ -211,14 +221,17 @@ void doInit(const char*text) {
 	char* out; JSON* json;
 	json = parse(text);
 	if (!json)  printf("Error position: %s\n", ErrorCatch());
-	out = json_print(json);
+	else {
+		out = json_print(json);
+		c_json_delete(json);
+	}
 }
 
 
 void writeInFile() {
 
 }
-
+																					 
 void generateInit(const char *arr[],int size) {
 	for (int i = 0; i < size; i++)
 	{
