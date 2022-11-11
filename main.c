@@ -26,7 +26,8 @@ static const char* parse_value(JSON* node, const char* value);
 
 static JSON* c_json_newItem() {
 	JSON* node = (JSON*)malloc(sizeof(JSON));
-	if (node)  memset(node,0, sizeof(JSON));
+	if (node)  memset(node, 0, sizeof(JSON));
+	else printf("内存error");
 	return node;
 }
 
@@ -131,8 +132,9 @@ static const char* parse_object(JSON*item, const char *str) {
 		return 0;
 	}
 	str =  skip(parse_value(child, skip(str + 1)));
+	printf("*str=%c", *str);
 	if (!str) return 0;
-	while (str == ',')
+	while (*str == ',')
 	{
 		JSON* nextChild = c_json_newItem();
 		child->next = nextChild, nextChild->prev = child, child = nextChild;
@@ -145,8 +147,9 @@ static const char* parse_object(JSON*item, const char *str) {
 			return 0;
 		}
 		str = skip(parse_value(child, skip(str + 1)));
+		if (!str) return 0;
 	}
-	if (str == '}') return str + 1;
+	if (*str == '}') return str + 1;
 	expression = str;
 	return 0;
 }
@@ -155,17 +158,20 @@ static const char * parse_value(JSON* node,const char*value) {
 	if (!value) return 0;
 	if (!strncmp(value, "null", 4)) {
 		node->type = JSON_null;
+		node->valueString = "null";
 		return value + 4;
 	}
 	if (!strncmp(value, "true", 4)) {
 		node->type = JSON_true;
+		node->valueString = "true";
 		return value + 4;
 	}
 	if (!strncmp(value, "false", 5)) {
 		node->type = JSON_false;
+		node->valueString = "false";
 		return value + 5;
-	}
-	if (*value == '-' || (*value <= 0 && *value >= 9)) {
+	}																				 
+	if (*value == '-' || (*value >= '0' && *value <= '9')) {
 		return parse_number(node, value);
 	}
 	if (*value == '\"') { return parse_string(node, value); }
@@ -207,13 +213,16 @@ void doInit(const char*text) {
 	if (!json)  printf("Error position: %s\n", ErrorCatch());
 	printf("json-child-%s-\n", json->child);
 	printf("json-nameString-%s-\n", json->nameString);
-	printf("json--%s-\n", json->next);
-	printf("json--%s-\n", json->prev);
-	printf("json--%d-\n", json->type);
-	printf("json--%lf-\n", json->ValueDouble);
-	printf("json--%d-\n", json->valueInt);
+	//printf("json--%s-\n", json->next);
+	//printf("json--%s-\n", json->prev);
+	printf("json-type-%d-\n", json->type);
+	//printf("json--%lf-\n", json->ValueDouble);
+	//printf("json--%d-\n", json->valueInt);
 	printf("json-valueString-%s-\n", json->valueString);
 	out = json_print(json);
+	if (expression) {
+		printf("Error position: %s\n", ErrorCatch());
+	}
 }
 
 
@@ -238,6 +247,15 @@ int main(int argc, const char * argv) {
 	char text3[] = "[\n    [0, -1, 0],\n    [1, 0, 0],\n    [0, 0, 1]\n	]\n";
 	char text4[] = "{\n		\"Image\": {\n			\"Width\":  800,\n			\"Height\": 600,\n			\"Title\":  \"View from 15th Floor\",\n			\"Thumbnail\": {\n				\"Url\":    \"http:/*www.example.com/image/481989943\",\n				\"Height\": 125,\n				\"Width\":  \"100\"\n			},\n			\"IDs\": [116, 943, 234, 38793]\n		}\n	}";
 	char text5[] = "[\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.7668,\n	 \"Longitude\": -122.3959,\n	 \"Address\":   \"\",\n	 \"City\":      \"SAN FRANCISCO\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94107\",\n	 \"Country\":   \"US\"\n	 },\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.371991,\n	 \"Longitude\": -122.026020,\n	 \"Address\":   \"\",\n	 \"City\":      \"SUNNYVALE\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94085\",\n	 \"Country\":   \"US\"\n	 }\n	 ]";
+	char text6[] = "  null";
+	char text7[] = "true";
+	char text8[] = "false ";
+	char text9[] = "56 ";
+	char text10[] = "-56";
 	char *allText[5] = { text1,text2, text3,text4,text5 };
-	generateInit(allText, 5);
+	char* allText2[5] = { text6,text7,text8,text9,text10 };
+	char* temp[1] = { text1 };
+	generateInit(temp, 1);
+	//generateInit(allText2, 5);
+	//generateInit(allText1, 5);
 }
