@@ -209,9 +209,51 @@ JSON* parse_options(const char * text,const char **require_end)
 
 JSON* parse(const char* text) { return parse_options(text, 0); }
 
-char* json_print(JSON* json) {
-	char* p = "待完成...";
-	return p;
+static char* cJSON_strdup(const char * text) {
+	size_t len;
+	char* copy;
+	len = strlen(text) + 1;
+	if (!(copy = (char*)malloc(len))) return 0;
+	memcpy(copy, text, len);
+	return copy;
+}
+static char* print_number(JSON* item) {
+	char* str;
+	double d = item->ValueDouble;
+	if (d == 0) {
+		str = (char*)malloc(2);
+		strcpy_s(str, sizeof(str), "0");
+	}
+	else {
+		str = (char*)malloc(64);
+		if (str) {
+			sprintf_s(str, sizeof(str), "%.0f", d);
+		}
+	}
+	return str;
+}
+
+char* json_print(JSON* item) {
+	char* out = 0;
+	if (!item) return 0;
+	switch (item->type)
+	{
+	case JSON_true:
+		out = cJSON_strdup("true");
+		break;
+	case JSON_false:
+		out = cJSON_strdup("false");
+		break;
+	case JSON_null:
+		out = cJSON_strdup("null");
+		break;
+	case JSON_number:
+		out = print_number(item);
+		break;
+	default:
+		break;
+	}
+	return out;
 }
 
 static const char* ErrorCatch() {
@@ -224,6 +266,8 @@ void doInit(const char*text) {
 	else {
 		out = json_print(json);
 		c_json_delete(json);
+		printf(out);
+		free(out);
 	}
 }
 
@@ -258,6 +302,6 @@ int main(int argc, const char * argv) {
 	char* allText2[5] = { text6,text7,text8,text9,text10 };
 	char* temp[1] = { text3 };
 	//generateInit(temp, 1);
-	//generateInit(allText2, 5);
-	generateInit(allText, 5);
+	generateInit(allText2, 5);
+	//generateInit(allText, 5);
 }
